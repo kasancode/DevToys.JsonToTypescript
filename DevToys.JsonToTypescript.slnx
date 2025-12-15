@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DevToys.JsonToTypescript/DevToys.JsonToTypescript.csproj" />
+  <Project Path="Test/Test.csproj" Id="4db7ea7e-4a47-41f6-91da-012a61e9f265" />
+</Solution>
