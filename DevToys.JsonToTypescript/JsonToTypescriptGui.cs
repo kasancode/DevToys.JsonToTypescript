@@ -24,6 +24,7 @@ internal sealed class JsonToTypescriptGui : IGuiTool
     private readonly IUIMultiLineTextInput _outputTextArea = MultiLineTextInput("json-to-typescript-output-text-area");
     private static readonly SettingDefinition<TypescriptDataType> _typescriptDataTypeDefinition = new(name: "Output type", defaultValue: TypescriptDataType.Interface);
     private static readonly SettingDefinition<bool> _addExport = new(name: "Add export keyword", defaultValue: true);
+    private static readonly SettingDefinition<JsonType> _jsonTypeDefinition = new(name: "JSON type", defaultValue: JsonType.AutoDetect);
 
     [ImportingConstructor]
     public JsonToTypescriptGui(ISettingsProvider settingsProvider)
@@ -65,6 +66,18 @@ internal sealed class JsonToTypescriptGui : IGuiTool
                         .LargeSpacing()
                         .WithChildren(
                             Label().Text(JsonToTypescriptExtension.ConvertJsonToTypescriptConfigurationTitle),
+                            Setting()
+                                .Icon("FluentSystemIcons", '\uEA71')
+                                .Title("JSON type")
+                                .Description("Select JSON type")
+                                .Handle(
+                                    this._settingsProvider,
+                                    _jsonTypeDefinition,
+                                    this.OnChanged,
+                                    Item("Auto detect", JsonType.AutoDetect),
+                                    Item("JSON data", JsonType.Data),
+                                    Item("JSON schema", JsonType.Shema)
+                                ),
                             Setting()
                                 .Icon("FluentSystemIcons", '\uECF4')
                                 .Title("Output type")
@@ -117,6 +130,9 @@ internal sealed class JsonToTypescriptGui : IGuiTool
         var json = this._inputTextArea.Text;
         var outputType = _settingsProvider.GetSetting(_typescriptDataTypeDefinition);
         var addExport = _settingsProvider.GetSetting(_addExport);
+        var jsonType = _settingsProvider.GetSetting(_jsonTypeDefinition);
+
+
 
         if (string.IsNullOrEmpty(json))
         {
@@ -126,8 +142,23 @@ internal sealed class JsonToTypescriptGui : IGuiTool
 
         try
         {
-            var converter = new JsonToTypescriptConverter(outputType, addExport);
-            this._outputTextArea.Text(converter.Convert(json));
+            var asSchema = jsonType == JsonType.Shema;
+            if (jsonType == JsonType.AutoDetect)
+            {
+                asSchema = JsonSchemaToTypescriptConverter.IsJsonSchema(json);
+            }
+
+            if (asSchema)
+            {
+                var converter = new JsonSchemaToTypescriptConverter(outputType, addExport);
+                this._outputTextArea.Text(converter.Convert(json));
+
+            }
+            else
+            {
+                var converter = new JsonToTypescriptConverter(outputType, addExport);
+                this._outputTextArea.Text(converter.Convert(json));
+            }
         }
         catch
         {
