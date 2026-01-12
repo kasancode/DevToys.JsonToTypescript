@@ -1,14 +1,8 @@
-﻿using System.Text;
+﻿using DevToys.JsonToTypescript.Models;
+using System.Text;
 using System.Text.Json;
 
 namespace DevToys.JsonToTypescript.Converters;
-
-public record class ClassItem(
-    string ClassName,
-    string Code,
-    int Hash,
-    List<string> PathList
-    );
 
 public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = TypescriptDataType.Interface, bool addExport = true)
 {
@@ -60,7 +54,7 @@ public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = Typ
         }
     }
 
-    internal (string ClassName, int ClassHash) CreateClassDefinitionSchema(JsonElement element, string name, string? path, List<ClassItem> outputList)
+    internal (string ClassName, int ClassHash) CreateClassDefinitionSchema(JsonElement element, string name, string? path, List<StructCode> outputList)
     {
         if (element.ValueKind != JsonValueKind.Object)
         {
@@ -158,7 +152,7 @@ public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = Typ
         return this.CreateCodeIfFirst(name, outputList, headerBuilder, bodyBuilder, hash, path, id, anchor);
     }
 
-    private (string Name, int Hash) CreateCodeIfFirst(string elementName, List<ClassItem> outputList, StringBuilder headerBuilder, StringBuilder bodyBuilder, int hash, string? path, string? id, string? anchor)
+    private (string Name, int Hash) CreateCodeIfFirst(string elementName, List<StructCode> outputList, StringBuilder headerBuilder, StringBuilder bodyBuilder, int hash, string? path, string? id, string? anchor)
     {
         // search same definition
         var definedItem = outputList.FirstOrDefault(item => item.Hash == hash);
@@ -228,7 +222,7 @@ public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = Typ
             CommentHandling = JsonCommentHandling.Skip
         });
 
-        var classCodes = new List<ClassItem>();
+        var classCodes = new List<StructCode>();
 
         // check root class name
         var rootName = this._rootNameBase;

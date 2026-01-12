@@ -1,4 +1,4 @@
-﻿namespace DevToys.JsonToTypescript.Converters;
+﻿namespace DevToys.JsonToTypescript.Models;
 
 public enum TypescriptDataType
 {

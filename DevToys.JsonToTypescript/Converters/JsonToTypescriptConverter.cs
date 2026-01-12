@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using DevToys.JsonToTypescript.Models;
+using System.Text;
 using System.Text.Json;
 
 namespace DevToys.JsonToTypescript.Converters;
@@ -37,7 +38,7 @@ public class JsonToTypescriptConverter(TypescriptDataType outputType = Typescrip
         // convert json to Typescript
         this.CreateClassDefinition(document.RootElement, rootName, classCodes);
 
-        return ConvertUtils.ConvertToTypescriptCode(classCodes);
+        return string.Join(Environment.NewLine, classCodes.Select(item => item.Code));
     }
 
 

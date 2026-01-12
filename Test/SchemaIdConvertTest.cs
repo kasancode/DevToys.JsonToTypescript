@@ -1,4 +1,5 @@
 ﻿using DevToys.JsonToTypescript.Converters;
+using DevToys.JsonToTypescript.Models;
 
 namespace Test;
 

@@ -1,6 +1,4 @@
-﻿using DevToys.Api;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace DevToys.JsonToTypescript.Converters;
 
@@ -47,14 +45,5 @@ internal static class ConvertUtils
 
         return baseHash;
     }
-
-
-    internal static string ConvertToTypescriptCode(List<(string ClassName, string Code, int Hash)> classCodes)
-    {
-        var importLines = new List<string>();
-        importLines.AddRange(classCodes.Select(item => item.Code));
-        return string.Join(Environment.NewLine, importLines);
-    }
-
 }
 

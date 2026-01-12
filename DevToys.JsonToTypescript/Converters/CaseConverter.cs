@@ -3,7 +3,7 @@ using System.Text;
 
 namespace DevToys.JsonToTypescript.Converters;
 
-internal static class CaseConveter
+internal static class CaseConverter
 {
     public static string ToPascalCase(this string text)
     {
