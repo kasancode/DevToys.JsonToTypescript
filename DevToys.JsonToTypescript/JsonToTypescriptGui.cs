@@ -67,37 +67,42 @@ internal sealed class JsonToTypescriptGui : IGuiTool
                         .LargeSpacing()
                         .WithChildren(
                             Label().Text(JsonToTypescriptExtension.ConvertJsonToTypescriptConfigurationTitle),
-                            Setting()
-                                .Icon("FluentSystemIcons", '\uEA71')
-                                .Title("JSON type")
-                                .Description("Select JSON type")
-                                .Handle(
-                                    this._settingsProvider,
-                                    _jsonTypeDefinition,
-                                    this.OnChanged,
-                                    Item("Auto detect", JsonType.AutoDetect),
-                                    Item("JSON data", JsonType.Data),
-                                    Item("JSON schema", JsonType.Shema)
-                                ),
-                            Setting()
-                                .Icon("FluentSystemIcons", '\uECF4')
-                                .Title("Output type")
-                                .Description("Select Typescript data type")
-                                .Handle(
-                                    this._settingsProvider,
-                                    _typescriptDataTypeDefinition,
-                                    this.OnChanged,
-                                    Item("Interface", TypescriptDataType.Interface),
-                                    Item("Type", TypescriptDataType.Type)
-                                ),
-                            Setting()
-                                .Icon("FluentSystemIcons", '\uF581')
-                                .Title("Add export keyword")
-                                .Description("Add export keyword before interfaces.")
-                                .Handle(
-                                    this._settingsProvider,
-                                    _addExport,
-                                    this.OnChanged
+                            SettingGroup("json-to-typescript-settings")
+                                .Icon("FluentSystemIcons", '\uF6A9')
+                                .Title("Settings")
+                                .WithSettings(
+                                    Setting()
+                                        .Icon("FluentSystemIcons", '\uEA71')
+                                        .Title("JSON type")
+                                        .Description("Select JSON type")
+                                        .Handle(
+                                            this._settingsProvider,
+                                            _jsonTypeDefinition,
+                                            this.OnChanged,
+                                            Item("Auto detect", JsonType.AutoDetect),
+                                            Item("JSON data", JsonType.Data),
+                                            Item("JSON schema", JsonType.Shema)
+                                        ),
+                                    Setting()
+                                        .Icon("FluentSystemIcons", '\uECF4')
+                                        .Title("Output type")
+                                        .Description("Select Typescript data type")
+                                        .Handle(
+                                            this._settingsProvider,
+                                            _typescriptDataTypeDefinition,
+                                            this.OnChanged,
+                                            Item("Interface", TypescriptDataType.Interface),
+                                            Item("Type", TypescriptDataType.Type)
+                                        ),
+                                    Setting()
+                                        .Icon("FluentSystemIcons", '\uF581')
+                                        .Title("Add export keyword")
+                                        .Description("Add export keyword before interfaces.")
+                                        .Handle(
+                                            this._settingsProvider,
+                                            _addExport,
+                                            this.OnChanged
+                                        )
                                 )
                         )
                 ),
