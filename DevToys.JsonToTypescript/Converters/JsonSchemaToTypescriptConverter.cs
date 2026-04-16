@@ -212,6 +212,96 @@ public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = Typ
         return (definedItem.ClassName, definedItem.Hash);
     }
 
+    internal (string ClassName, int ClassHash) CreateTypeAliasDefinitionSchema(JsonElement element, string name, string? path, List<StructCode> outputList)
+    {
+        string tsType;
+
+        var schemaType = element.TryGetProperty("type", out var typeEl) ? typeEl.GetString() : null;
+
+        if (schemaType == "array")
+        {
+            if (element.TryGetProperty("items", out var itemsEl) && itemsEl.ValueKind == JsonValueKind.Object)
+            {
+                if (itemsEl.TryGetProperty("type", out var itemTypeEl))
+                {
+                    var itemSchemaType = itemTypeEl.GetString();
+                    if (itemSchemaType == "object")
+                    {
+                        var (itemClassName, _) = this.CreateClassDefinitionSchema(itemsEl, name + "Item", null, outputList);
+                        tsType = $"{itemClassName}[]";
+                    }
+                    else
+                    {
+                        tsType = $"{ConvertUtils.ToTypescriptType(itemSchemaType)}[]";
+                    }
+                }
+                else
+                {
+                    tsType = "any[]";
+                }
+            }
+            else
+            {
+                tsType = "any[]";
+            }
+        }
+        else
+        {
+            tsType = ConvertUtils.ToTypescriptType(schemaType);
+        }
+
+        string? anchor = null;
+        string? id = null;
+
+        if (element.TryGetProperty("$anchor", out var anchorElement))
+        {
+            anchor = $"#{anchorElement.GetString()}";
+        }
+
+        if (element.TryGetProperty("$id", out var idElement))
+        {
+            id = idElement.GetString();
+        }
+
+        var hash = HashCode.Combine(name, tsType);
+
+        var definedItem = outputList.FirstOrDefault(item => item.Hash == hash);
+        if (definedItem == default)
+        {
+            var classNameBase = name.ToPascalCase();
+            var className = classNameBase;
+            var idx = 1;
+            while (outputList.Any(item => item.ClassName == className))
+            {
+                idx++;
+                className = $"{classNameBase}{idx}";
+            }
+
+            var export = addExport ? "export " : "";
+            var code = $"{export}type {className} = {tsType};{Environment.NewLine}";
+
+            definedItem = new StructCode(className, code, hash, path is null ? [] : [path]);
+            outputList.Add(definedItem);
+        }
+        else if (!string.IsNullOrEmpty(path) && !definedItem.PathList.Contains(path))
+        {
+            definedItem.PathList.Add(path);
+        }
+
+        if (!string.IsNullOrEmpty(id) && this.baseId is not null)
+        {
+            var combinedId = new Uri(this.baseId, id);
+            definedItem.PathList.Add(combinedId.ToString());
+        }
+
+        if (!string.IsNullOrEmpty(anchor))
+        {
+            definedItem.PathList.Add(anchor);
+        }
+
+        return (definedItem.ClassName, definedItem.Hash);
+    }
+
     public string Convert(string json)
     {
         this.InitFlag();
@@ -251,7 +341,15 @@ public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = Typ
         {
             foreach (var property in refElement.EnumerateObject())
             {
-                this.CreateClassDefinitionSchema(property.Value, property.Name.ToPascalCase(), $"#/$defs/{property.Name}", classCodes);
+                var isObject = property.Value.TryGetProperty("type", out var defTypeEl) && defTypeEl.GetString() == "object";
+                if (isObject)
+                {
+                    this.CreateClassDefinitionSchema(property.Value, property.Name.ToPascalCase(), $"#/$defs/{property.Name}", classCodes);
+                }
+                else
+                {
+                    this.CreateTypeAliasDefinitionSchema(property.Value, property.Name.ToPascalCase(), $"#/$defs/{property.Name}", classCodes);
+                }
             }
         }
 
