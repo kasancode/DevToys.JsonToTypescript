@@ -220,9 +220,25 @@ public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = Typ
 
         if (schemaType == "array")
         {
-            if (element.TryGetProperty("items", out var itemsEl) && itemsEl.TryGetProperty("type", out var itemTypeEl))
+            if (element.TryGetProperty("items", out var itemsEl) && itemsEl.ValueKind == JsonValueKind.Object)
             {
-                tsType = $"{ConvertUtils.ToTypescriptType(itemTypeEl.GetString())}[]";
+                if (itemsEl.TryGetProperty("type", out var itemTypeEl))
+                {
+                    var itemSchemaType = itemTypeEl.GetString();
+                    if (itemSchemaType == "object")
+                    {
+                        var (itemClassName, _) = this.CreateClassDefinitionSchema(itemsEl, name + "Item", null, outputList);
+                        tsType = $"{itemClassName}[]";
+                    }
+                    else
+                    {
+                        tsType = $"{ConvertUtils.ToTypescriptType(itemSchemaType)}[]";
+                    }
+                }
+                else
+                {
+                    tsType = "any[]";
+                }
             }
             else
             {
@@ -232,6 +248,19 @@ public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = Typ
         else
         {
             tsType = ConvertUtils.ToTypescriptType(schemaType);
+        }
+
+        string? anchor = null;
+        string? id = null;
+
+        if (element.TryGetProperty("$anchor", out var anchorElement))
+        {
+            anchor = $"#{anchorElement.GetString()}";
+        }
+
+        if (element.TryGetProperty("$id", out var idElement))
+        {
+            id = idElement.GetString();
         }
 
         var hash = HashCode.Combine(name, tsType);
@@ -257,6 +286,17 @@ public class JsonSchemaToTypescriptConverter(TypescriptDataType outputType = Typ
         else if (!string.IsNullOrEmpty(path) && !definedItem.PathList.Contains(path))
         {
             definedItem.PathList.Add(path);
+        }
+
+        if (!string.IsNullOrEmpty(id) && this.baseId is not null)
+        {
+            var combinedId = new Uri(this.baseId, id);
+            definedItem.PathList.Add(combinedId.ToString());
+        }
+
+        if (!string.IsNullOrEmpty(anchor))
+        {
+            definedItem.PathList.Add(anchor);
         }
 
         return (definedItem.ClassName, definedItem.Hash);
